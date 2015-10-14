@@ -22,7 +22,7 @@ class DropboxOAuth(AppOAuthv2Account):
         token_type = 'bearer'
 
         auth_uri = 'https://www.dropbox.com/1/oauth2/authorize?response_type=code&client_id={}'.format(
-            os.environ.get('CLIENT_ID', 'fwfvp64okmo9s9r'))
+            os.environ.get('DROPBOX_CLIENT_SECRET', ''))
         token_uri = 'https://api.dropbox.com/1/oauth2/token'
 
     def get_request(self, url, **kwargs):

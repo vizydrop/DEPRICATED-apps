@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from urllib.request import urlopen, Request
 import json
 from tornado import gen, log
@@ -50,21 +50,25 @@ class GoogleSheetsOAuth(AppOAuthv2Account):
         if self.token_expiration and self.token_expiration < datetime.now():
             # we need to refresh our token
             log.app_log.info("Refreshing token for account {}".format(self._id))
-            uri, headers, body = self._oauth_client.prepare_refresh_token_request(self.Meta.token_uri,
-                                                                                  client_id=self.Meta.client_id,
-                                                                                  client_secret=self.Meta.client_secret,
-                                                                                  refresh_token=self.refresh_token)
+            try:
+                uri, headers, body = self._oauth_client.prepare_refresh_token_request(self.Meta.token_uri,
+                                                                                      client_id=self.Meta.client_id,
+                                                                                      client_secret=self.Meta.client_secret,
+                                                                                      refresh_token=self.refresh_token)
 
-            token_request = Request(uri, data=body.encode('utf-8'), headers=headers, method='POST')
-            # this needs to be blocking to avoid a race condition
-            request = urlopen(token_request)
-            response = request.read().decode('utf-8')
+                token_request = Request(uri, data=body.encode('utf-8'), headers=headers, method='POST')
+                # this needs to be blocking to avoid a race condition
+                request = urlopen(token_request)
+                response = request.read().decode('utf-8')
 
-            response_data = json.loads(response)
-            self.access_token = response_data.get('access_token')
-            self._oauth_client.access_token = self.access_token
-            self.token_expiration = datetime.now() + timedelta(seconds=int(response_data.get('expires_in')))
-            log.app_log.info("Token refreshed successfully!")
+                response_data = json.loads(response)
+                self.access_token = response_data.get('access_token')
+                self._oauth_client.access_token = self.access_token
+                self.token_expiration = datetime.now() + timedelta(seconds=int(response_data.get('expires_in')))
+                log.app_log.info("Token refreshed successfully!")
+            except HTTPError as e:
+                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.response.body.decode('utf-8')))
+                raise e
 
         return client
 

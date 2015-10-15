@@ -12,7 +12,7 @@ class DropboxOAuth(AppOAuthv2Account):
     class Meta:
         identifier = 'oauth2'
         name = "OAuth v2 Authentication"
-        description = "OAuth v2-based authentication and authorization for access to GitHub"
+        description = "OAuth v2-based authentication and authorization for access to Dropbox"
 
         client_id = os.environ.get('DROPBOX_CLIENT_ID', '')
         client_secret = os.environ.get('DROPBOX_CLIENT_SECRET', '')

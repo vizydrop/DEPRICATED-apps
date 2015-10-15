@@ -48,11 +48,17 @@ class BoxOAuth(AppOAuthv2Account):
         if self.token_expiration and self.token_expiration < datetime.now():
             # we need to refresh our token
             log.app_log.info("Refreshing token for account {}".format(self._id))
+            assert self.refresh_token is not None
             try:
                 uri, headers, body = self._oauth_client.prepare_refresh_token_request(self.Meta.token_uri,
                                                                                       client_id=self.Meta.client_id,
                                                                                       client_secret=self.Meta.client_secret,
                                                                                       refresh_token=self.refresh_token)
+
+                log.app_log.info(self.refresh_token)
+                log.app_log.info(uri)
+                log.app_log.info(body)
+                log.app_log.info(headers)
 
                 token_request = Request(uri, data=body.encode('utf-8'), headers=headers, method='POST')
                 # this needs to be blocking to avoid a race condition

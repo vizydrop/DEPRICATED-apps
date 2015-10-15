@@ -97,6 +97,7 @@ class BoxFileSource(StreamingDataSource):
 
             def stream_callback(chunk):
                 # only dump out chunks that are of the file we're looking for
+                global receiving_file
                 if receiving_file:
                     cls.write(chunk)
 

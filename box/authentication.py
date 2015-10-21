@@ -56,11 +56,6 @@ class BoxOAuth(AppOAuthv2Account):
                                                                                       client_secret=self.Meta.client_secret,
                                                                                       refresh_token=self.refresh_token)
 
-                log.app_log.info(self.refresh_token)
-                log.app_log.info(uri)
-                log.app_log.info(body)
-                log.app_log.info(headers)
-
                 token_request = Request(uri, data=body.encode('utf-8'), headers=headers, method='POST')
                 # this needs to be blocking to avoid a race condition
                 request = urlopen(token_request)
@@ -74,7 +69,7 @@ class BoxOAuth(AppOAuthv2Account):
                 self._oauth_client.access_token = self.access_token
                 log.app_log.info("Token refreshed successfully!")
             except HTTPError as e:
-                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.__dict__))
+                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
                 raise e
 
         return client

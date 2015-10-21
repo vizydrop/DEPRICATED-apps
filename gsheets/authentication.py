@@ -1,12 +1,13 @@
 from datetime import timedelta, datetime
-from urllib.request import urlopen, Request
+from urllib.request import urlopen, Request, HTTPError
 import json
 from tornado import gen, log
 
 import os
 from oauthlib.oauth2.rfc6749.clients.base import AUTH_HEADER
 
-from tornado.httpclient import HTTPRequest, HTTPError, AsyncHTTPClient
+from tornado.httpclient import HTTPRequest, AsyncHTTPClient
+from tornado.httpclient import HTTPError as AsyncHTTPError
 
 from vizydrop.fields import *
 from vizydrop.sdk.account import AppOAuthv2Account
@@ -67,7 +68,7 @@ class GoogleSheetsOAuth(AppOAuthv2Account):
                 self.token_expiration = datetime.now() + timedelta(seconds=int(response_data.get('expires_in')))
                 log.app_log.info("Token refreshed successfully!")
             except HTTPError as e:
-                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.response.body.decode('utf-8')))
+                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
                 raise e
 
         return client
@@ -94,7 +95,7 @@ class GoogleSheetsOAuth(AppOAuthv2Account):
                 return True, None
             else:
                 return False, resp.body.decode('utf-8')
-        except HTTPError as e:
+        except AsyncHTTPError as e:
             return False, e.response.reason
 
     @gen.coroutine

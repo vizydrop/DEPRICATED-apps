@@ -1,10 +1,11 @@
 import json
 import os
-from urllib.request import urlopen, Request
+from urllib.request import urlopen, Request, HTTPError
 from datetime import timedelta, datetime
 
 from oauthlib.oauth2.rfc6749.clients.base import AUTH_HEADER
-from tornado.httpclient import HTTPRequest, HTTPError, AsyncHTTPClient
+from tornado.httpclient import HTTPRequest, AsyncHTTPClient
+from tornado.httpclient import HTTPError as AsyncHTTPError
 from tornado import gen, log
 
 from vizydrop.fields import *
@@ -73,7 +74,7 @@ class MicrosoftLiveAccount(AppOAuthv2Account):
                 self.access_token = response_data.get('access_token')
                 self.token_expiration = datetime.now() + timedelta(seconds=int(response_data.get('expires_in')))
             except HTTPError as e:
-                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.response.body.decode('utf-8')))
+                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
                 raise e
 
         return client
@@ -88,7 +89,7 @@ class MicrosoftLiveAccount(AppOAuthv2Account):
                 return True, None
             else:
                 return False, resp.body.decode('utf-8')
-        except HTTPError as e:
+        except AsyncHTTPError as e:
             return False, e.response.reason
 
     @gen.coroutine

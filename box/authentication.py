@@ -1,13 +1,14 @@
 import json
 from datetime import datetime, timedelta
-from urllib.request import urlopen, Request
+from urllib.request import urlopen, Request, HTTPError
 from tornado import gen, log
 
 import os
 
 from oauthlib.oauth2.rfc6749.clients.base import AUTH_HEADER
 
-from tornado.httpclient import HTTPError, AsyncHTTPClient, HTTPRequest
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado.httpclient import HTTPError as AsyncHTTPError
 
 from vizydrop.sdk.account import AppOAuthv2Account
 from vizydrop.fields import TextField, DateTimeField
@@ -48,6 +49,7 @@ class BoxOAuth(AppOAuthv2Account):
         if self.token_expiration and self.token_expiration < datetime.now():
             # we need to refresh our token
             log.app_log.info("Refreshing token for account {}".format(self._id))
+            assert self.refresh_token is not None
             try:
                 uri, headers, body = self._oauth_client.prepare_refresh_token_request(self.Meta.token_uri,
                                                                                       client_id=self.Meta.client_id,
@@ -67,7 +69,7 @@ class BoxOAuth(AppOAuthv2Account):
                 self._oauth_client.access_token = self.access_token
                 log.app_log.info("Token refreshed successfully!")
             except HTTPError as e:
-                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.response.body.decode('utf-8')))
+                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
                 raise e
 
         return client
@@ -93,7 +95,7 @@ class BoxOAuth(AppOAuthv2Account):
                 return True, None
             else:
                 return False, resp.body.decode('utf-8')
-        except HTTPError as e:
+        except AsyncHTTPError as e:
             return False, e.response.reason
 
     @gen.coroutine

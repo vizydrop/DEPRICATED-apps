@@ -47,7 +47,6 @@ class GitHubContributorsStatsSource(StreamingDataSource):
         app_log.info("Starting retrieval of weekly contribution data for account {}".format(account._id))
         resp = yield client.fetch(req)
         data = json.loads(resp.body.decode('utf-8'))
-        assert isinstance(data, list)
 
         # open our list
         cls.write('[')

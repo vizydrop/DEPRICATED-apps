@@ -14,7 +14,7 @@ from vizydrop.fields import *
 
 
 # what file extensions are we interested in
-VALID_FILETYPES = ['txt', 'tsv', 'csv', 'dat', 'xls', 'xlsx']
+VALID_FILETYPES = ['txt', 'tsv', 'csv', 'json', 'xls', 'xlsx']
 # how many concurrent fetches can we do?
 FETCH_CONCURRENCY = 10
 # our maximum request time (in seconds)
@@ -28,7 +28,7 @@ class DropboxFileFilter(SourceFilter):
         queue = Queue()
         sem = BoundedSemaphore(FETCH_CONCURRENCY)
         done, working = set(), set()
-        data = []
+        data = set()
 
         @gen.coroutine
         def fetch_url():
@@ -48,9 +48,9 @@ class DropboxFileFilter(SourceFilter):
 
                 for file in response_data:
                     # be sure we're a valid file type and less than our maximum response size limit
-                    if file['path'][-3:].lower() in VALID_FILETYPES \
-                            and int(file['bytes']) < RESPONSE_SIZE_LIMIT * 1000000:
-                        data.append({"title": file['path'].lstrip('/'), "value": file['path']})
+                    extension = file['path'].lower().split('.')[-1]
+                    if extension in VALID_FILETYPES and int(file['bytes']) < RESPONSE_SIZE_LIMIT * 1000000:
+                        data.add((file['path'].lstrip('/'), file['path'], ))
                 app_log.info("Page {} completed".format(page_no))
             finally:
                 queue.task_done()
@@ -72,7 +72,7 @@ class DropboxFileFilter(SourceFilter):
         # wait until we're done
         yield queue.join(timeout=timedelta(seconds=MAXIMUM_REQ_TIME))
         app_log.info("Finished list retrieval. Found {} items.".format(data.__len__()))
-        return sorted(data, key=lambda f: f['title'])
+        return sorted([{"title": title, "value": path} for title, path in data], key=lambda f: f['title'])
 
     file = TextField(name="Filename", description="Path to the file", optional=False, get_options=get_file_list)
 

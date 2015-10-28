@@ -37,7 +37,9 @@ class GitHubRepositoryFilter(SourceFilter):
         return ""
 
 
-class GitHubRepositoryDateFilter(GitHubRepositoryFilter):
+class GitHubRepositoryDateFilter(SourceFilter):
+    repository = TextField(name="Repository", description="GitHub Repository", optional=False,
+                           get_options=GitHubRepositoryFilter.get_repo_options)
     date = DateField(name="Date", description="Date or range to focus on", optional=True)
 
     def get_qs(self, encode=True):

@@ -5,17 +5,27 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 from tornado.log import app_log
 
+from tornado.locks import BoundedSemaphore
+from tornado.queues import Queue
+
 from vizydrop.sdk.source import StreamingDataSource, SourceSchema, SourceFilter
 from vizydrop.fields import *
 from datetime import timedelta
 
 VALID_FILETYPES = ['txt', 'tsv', 'csv', 'dat', 'xls', 'xlsx']
 RESPONSE_SIZE_LIMIT = 10  # MB
+# how many concurrent fetches can we do?
+FETCH_CONCURRENCY = 10
+# our maximum request time (in seconds)
+MAXIMUM_REQ_TIME = 30
 
 
 class BoxFileFilter(SourceFilter):
     def get_file_list(account, **kwargs):
-        uri = "https://api.box.com/2.0/search"
+        queue = Queue()
+        sem = BoundedSemaphore(FETCH_CONCURRENCY)
+        done, working = set(), set()
+        data = set()
         request_params = {
             'type': 'file',
             'limit': 200,
@@ -23,24 +33,52 @@ class BoxFileFilter(SourceFilter):
             'file_extensions': ','.join(VALID_FILETYPES)
         }
         qs = '&'.join(["{}={}".format(key, value) for key, value in request_params.items()])
-        search_uris = []
-        files = []
-        for extension in VALID_FILETYPES:
-            search_uris.append("{}?query={}&{}".format(uri, extension, qs))
+
+        @gen.coroutine
+        def fetch_url():
+            current_url = yield queue.get()
+            try:
+                if current_url in working:
+                    return
+                page_no = working.__len__()
+                app_log.info("Fetching page {}".format(page_no))
+                working.add(current_url)
+                req = account.get_request(current_url)
+                client = AsyncHTTPClient()
+                response = yield client.fetch(req)
+                done.add(current_url)
+                app_log.info("Page {} downloaded".format(page_no))
+                response_data = json.loads(response.body.decode('utf-8'))
+
+                for file in response_data.get('entries', []):
+                    file_entry = (('/'.join([path['name'] for path in file['path_collection']['entries'] if path['id'] != '0']
+                        + [file['name']])).lstrip('/'), file['id'])
+                    # be sure we're a valid file type and less than our maximum response size limit
+                    extension = file['name'].lower().split('.')[-1]
+                    if extension in VALID_FILETYPES:
+                        data.add(file_entry)
+                app_log.info("Page {} completed".format(page_no))
+            finally:
+                queue.task_done()
+                sem.release()
+
+        @gen.coroutine
+        def worker():
+            while True:
+                yield sem.acquire()
+                fetch_url()
+
         app_log.info("Gathering filelist for account {}".format(account._id))
-        for uri in search_uris:
-            client = AsyncHTTPClient()
-            req = account.get_request(uri)
-            response = yield client.fetch(req)
-            response_data = json.loads(response.body.decode('utf-8'))
-            for file in response_data.get('entries', []):
-                file_entry = {"title": ('/'.join(
-                    [path['name'] for path in file['path_collection']['entries'] if path['id'] != '0']
-                    + [file['name']])).lstrip('/'), "value": file['id']}
-                if file_entry not in files:
-                    files.append(file_entry)
-        app_log.info("Filelist retrieved for {}".format(account._id))
-        return sorted(files, key=lambda f: f['title'])
+        for file_type in VALID_FILETYPES:
+            file_type = '.'.join([file_type])
+            url = "https://api.box.com/2.0/search?query={}&{}".format(file_type, qs)
+            queue.put(url)
+        # start our concurrency worker
+        worker()
+        # wait until we're done
+        yield queue.join(timeout=timedelta(seconds=MAXIMUM_REQ_TIME))
+        app_log.info("Finished list retrieval. Found {} items.".format(data.__len__()))
+        return sorted([{"title": title, "value": path} for title, path in data], key=lambda f: f['title'])
 
     file = TextField(name="Filename", description="Path to the file", optional=False, get_options=get_file_list)
 

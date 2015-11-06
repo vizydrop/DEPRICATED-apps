@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 from tornado import gen
 
-from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import AsyncHTTPClient, HTTPError
 from tornado.log import app_log
 
 from tornado.locks import BoundedSemaphore
@@ -54,7 +54,6 @@ class GitHubCommitsSource(StreamingDataSource):
         if source_filter.repository is None:
             raise ValueError('required parameter projects missing')
 
-        data = []
         default_headers = {"Content-Type": "application/json", "Accept": "application/vnd.github.v3+json"}
 
         # first we grab our list of commits
@@ -91,6 +90,9 @@ class GitHubCommitsSource(StreamingDataSource):
                 uri = links.get('next', None)
             else:
                 break
+
+            if queue.qsize() > 500:
+                raise HTTPError(413, 'too many commits')
         app_log.info("({}) Commit list retrieved, fetching info for {} commits".format(account._id, taken))
 
         # open our list
@@ -137,8 +139,12 @@ class GitHubCommitsSource(StreamingDataSource):
 
         # start our concurrency worker
         worker()
-        # wait until we're done
-        yield queue.join(timeout=timedelta(seconds=MAXIMUM_REQ_TIME))
-        # close our list
-        cls.write(']')
+        try:
+            # wait until we're done
+            yield queue.join(timeout=timedelta(seconds=MAXIMUM_REQ_TIME))
+        except gen.TimeoutError:
+            app_log.warning("Request exceeds maximum time, cutting response short")
+        finally:
+            # close our list
+            cls.write(']')
         app_log.info("Finished retrieving commits for {}".format(account._id))

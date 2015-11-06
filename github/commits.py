@@ -90,10 +90,10 @@ class GitHubCommitsSource(StreamingDataSource):
                 uri = links.get('next', None)
             else:
                 break
-        app_log.info("({}) Commit list retrieved, fetching info for {} commits".format(account._id, taken))
 
-        if queue.qsize() > 500:
-            raise HTTPError(413, 'too many commits')
+            if queue.qsize() > 500:
+                raise HTTPError(413, 'too many commits')
+        app_log.info("({}) Commit list retrieved, fetching info for {} commits".format(account._id, taken))
 
         # open our list
         cls.write('[')

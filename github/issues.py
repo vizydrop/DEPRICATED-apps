@@ -9,7 +9,7 @@ from tornado.log import app_log
 from .base_filter import GitHubRepositoryDateFilter
 from vizydrop.utils import parse_link_header
 from vizydrop.fields import *
-from vizydrop.sdk.source import SourceSchema, DataSource
+from vizydrop.sdk.source import SourceSchema, StreamingDataSource
 
 
 class GitHubIssuesFilter(GitHubRepositoryDateFilter):
@@ -49,7 +49,7 @@ class GitHubIssuesFilter(GitHubRepositoryDateFilter):
             return ""
 
 
-class GitHubIssuesSource(DataSource):
+class GitHubIssuesSource(StreamingDataSource):
     class Meta:
         identifier = "issues"
         name = "Issues"
@@ -88,7 +88,6 @@ class GitHubIssuesSource(DataSource):
             raise ValueError('required parameter projects missing')
         app_log.info("Starting retrieval of issues for {}".format(account._id))
 
-        data = []
         default_headers = {"Content-Type": "application/json", "Accept": "application/vnd.github.v3+json"}
 
         page_size = limit if limit is not None and limit <= 100 else 100
@@ -98,6 +97,9 @@ class GitHubIssuesSource(DataSource):
                                                                              page_size, source_filter.get_qs())
         uri = uri.rstrip('&')  # remove trailing & in case filter has no QS elements
 
+        cls.write('[')
+        count = 0
+
         while uri is not None:
             app_log.info(
                 "({}) Retrieving next page, received {} issues thus far".format(account._id, taken))
@@ -105,15 +107,20 @@ class GitHubIssuesSource(DataSource):
             response = yield client.fetch(req)
 
             page_data = json.loads(response.body.decode('utf-8'))
-            taken += page_data.__len__()
-            data += page_data
 
-            if limit is None or taken < limit:
+            for issue in page_data:
+                if count > 0:
+                    cls.write(',')
+                cls.write(cls.format_data_to_schema(issue))
+                count += 1
+
+            if limit is None or count < limit:
                 # parse the Link header from GitHub (https://developer.github.com/v3/#pagination)
                 links = parse_link_header(response.headers.get('Link', ''))
                 uri = links.get('next', None)
             else:
                 break
 
-        app_log.info("[GitHub] Finished retrieving issues for repository {}".format(source_filter.repository))
-        return json.dumps(cls.format_data_to_schema(data))
+        cls.write(']')
+
+        app_log.info("[GitHub] Finished retrieving {} issues for repository {}".format(count, source_filter.repository))

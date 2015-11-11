@@ -73,6 +73,8 @@ class MicrosoftLiveAccount(AppOAuthv2Account):
                 response_data = json.loads(response)
                 self.access_token = response_data.get('access_token')
                 self.token_expiration = datetime.now() + timedelta(seconds=int(response_data.get('expires_in')))
+                log.app_log.info("Token refreshed successfully!")
+                self.save()
             except HTTPError as e:
                 log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
                 raise e

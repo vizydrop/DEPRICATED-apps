@@ -67,6 +67,7 @@ class GoogleSheetsOAuth(AppOAuthv2Account):
                 self._oauth_client.access_token = self.access_token
                 self.token_expiration = datetime.now() + timedelta(seconds=int(response_data.get('expires_in')))
                 log.app_log.info("Token refreshed successfully!")
+                self.save()
             except HTTPError as e:
                 log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
                 raise e

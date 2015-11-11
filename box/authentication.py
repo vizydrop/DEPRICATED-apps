@@ -68,6 +68,7 @@ class BoxOAuth(AppOAuthv2Account):
                 self._oauth_client.refresh_token = self.refresh_token
                 self._oauth_client.access_token = self.access_token
                 log.app_log.info("Token refreshed successfully!")
+                self.save()
             except HTTPError as e:
                 log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
                 raise e

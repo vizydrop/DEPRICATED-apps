@@ -48,37 +48,6 @@ class MicrosoftLiveAccount(AppOAuthv2Account):
             self.token_expiration = datetime.now() + timedelta(seconds=int(response.get('expires_in')))
             self.enabled = True
 
-    def get_client(self):
-        """
-        Special hijack of our parent method so we can handle token expiration
-        :return:
-        """
-        client = super(MicrosoftLiveAccount, self).get_client()
-        if self.refresh_token:
-            self._oauth_client.refresh_token = self.refresh_token
-        if self.token_expiration and self.token_expiration < datetime.now():
-            # we need to refresh our token
-            log.app_log.info("Refreshing token for account {}".format(self._id))
-            try:
-                uri, headers, body = self._oauth_client.prepare_refresh_token_request(self.Meta.token_uri,
-                                                                                      client_id=self.Meta.client_id,
-                                                                                      client_secret=self.Meta.client_secret,
-                                                                                      refresh_token=self.refresh_token)
-
-                token_request = Request(uri, data=body.encode('utf-8'), headers=headers, method='POST')
-                # this needs to be blocking to avoid a race condition
-                request = urlopen(token_request)
-                response = request.read().decode('utf-8')
-
-                response_data = json.loads(response)
-                self.access_token = response_data.get('access_token')
-                self.token_expiration = datetime.now() + timedelta(seconds=int(response_data.get('expires_in')))
-            except HTTPError as e:
-                log.app_log.error("Error refreshing token {} ({})".format(self._id, e.readlines()))
-                raise e
-
-        return client
-
     @gen.coroutine
     def validate(self):
         try:

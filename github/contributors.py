@@ -1,7 +1,7 @@
 import json
 from tornado import gen
 
-from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import AsyncHTTPClient, HTTPError
 
 from tornado.log import app_log
 
@@ -42,11 +42,25 @@ class GitHubContributorsStatsSource(StreamingDataSource):
         if source_filter.repository is None:
             raise ValueError('required parameter projects missing')
 
-        # first we grab our list of commits
+        data = None
+
         req = account.get_request("https://api.github.com/repos/{}/stats/contributors".format(source_filter.repository))
         app_log.info("Starting retrieval of weekly contribution data for account {}".format(account._id))
-        resp = yield client.fetch(req)
-        data = json.loads(resp.body.decode('utf-8'))
+        for i in range(0, 3):  # we only try this four times at most
+            resp = yield client.fetch(req)
+            if (resp.code == 202):
+                # GitHub is making this in the background, let's wait a little and retry
+                app_log.info("GitHub responded 202: waiting for stats to compile for account {}".format(account._id))
+                yield gen.sleep(5)
+            else:
+                data = json.loads(resp.body.decode('utf-8'))
+                app_log.info("Data received for weekly contribution")
+                break
+
+        # if we didn't get anything from GitHub, we fail out
+        if not data:
+            app_log.warning("No contribution data received from GitHub for account {}".format(account._id))
+            raise HTTPError(408, "request timed out: please try again later")
 
         # open our list
         cls.write('[')

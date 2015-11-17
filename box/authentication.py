@@ -52,6 +52,7 @@ class BoxOAuth(AppOAuthv2Account):
     @gen.coroutine
     def validate(self):
         try:
+            yield self.do_token_refresh()
             client = AsyncHTTPClient()
             req = self.get_request("https://api.box.com/2.0/users/me")
             resp = yield client.fetch(req)

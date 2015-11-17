@@ -51,6 +51,7 @@ class MicrosoftLiveAccount(AppOAuthv2Account):
     @gen.coroutine
     def validate(self):
         try:
+            yield self.do_token_refresh()
             client = AsyncHTTPClient()
             req = self.get_request("https://apis.live.net/v5.0/me")
             resp = yield client.fetch(req)

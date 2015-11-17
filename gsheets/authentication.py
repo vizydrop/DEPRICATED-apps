@@ -55,6 +55,7 @@ class GoogleSheetsOAuth(AppOAuthv2Account):
     @gen.coroutine
     def validate(self):
         try:
+            yield self.do_token_refresh()
             client = AsyncHTTPClient()
             req = self.get_request("https://spreadsheets.google.com/feeds/spreadsheets/private/full")
             resp = yield client.fetch(req)

@@ -23,7 +23,8 @@ class OneDriveFileFilter(SourceFilter):
         queue = Queue()
         sem = BoundedSemaphore(FETCH_CONCURRENCY)
         done, working = set(), set()
-        data = set()
+        data = []
+        ids = set()
 
         @gen.coroutine
         def fetch_url():
@@ -47,9 +48,11 @@ class OneDriveFileFilter(SourceFilter):
 
                 for file in response_data.get('value', []):
                     if file['name'][-4:].strip('.').lower() in VALID_FILETYPES:
-                        data.add(
-                            {"title": file['parentReference']['path'].split(':')[1].lstrip('/') + '/' + file['name'],
-                             "value": file['id']})
+                        if file['id'] not in ids:
+                            ids.add(file['id'])
+                            data.append(
+                                {"title": file['parentReference']['path'].split(':')[1].lstrip('/') + '/' + file['name'],
+                                 "value": file['id']})
                 app_log.info("Page {} completed".format(page_no))
             finally:
                 queue.task_done()

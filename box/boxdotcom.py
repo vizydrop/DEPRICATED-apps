@@ -9,7 +9,7 @@ class Box(Application):
         version = "1.0"
         name = "Box.com"
         website = "http://www.box.com/"
-        color = "#0076C0"
+        color = "#0275C9"
         description = "Box offers secure content management and collaboration for individuals, teams and businesses, " \
                       "enabling secure file sharing and access to your files online."
         tags = ['cloud storage', 'files', ]

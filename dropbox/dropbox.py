@@ -9,7 +9,7 @@ class Dropbox(Application):
         version = "1.0"
         name = "Dropbox"
         website = "http://www.dropbox.com/"
-        color = "#0076C0"
+        color = "#FFFFFF"
         description = "Good things happen when your stuff lives here. Dropbox keeps your files safe, synced, " \
                       "and easy to share."
         tags = ['cloud storage', 'files', ]

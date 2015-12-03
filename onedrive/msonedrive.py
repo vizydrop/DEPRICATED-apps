@@ -8,7 +8,7 @@ class OneDrive(Application):
         version = "1.0"
         name = "OneDrive"
         website = "http://www.onedrive.com/"
-        color = "#0076C0"
+        color = "#FFFFFF"
         description = "OneDrive is the one place for everything in your work and personal life. It gives you free " \
                       "online storage for all your personal files so that you can get to them from anywhere."
         tags = ['cloud storage', 'files', ]

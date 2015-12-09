@@ -5,7 +5,7 @@ from tornado.httpclient import AsyncHTTPClient, HTTPError
 
 from tornado.log import app_log
 
-from .base_filter import GitHubRepositoryFilter
+from .base_filter import GitHubRepositoryDateFilter
 from vizydrop.sdk.source import StreamingDataSource, SourceSchema
 from vizydrop.fields import *
 
@@ -16,7 +16,7 @@ class GitHubContributorsStatsSource(StreamingDataSource):
         name = "Weekly Contributions"
         tags = ["Contributors", "Weekly", "Source Code", ]
         description = "List of weekly contributors data"
-        filter = GitHubRepositoryFilter
+        filter = GitHubRepositoryDateFilter
 
     class Schema(SourceSchema):
         date = DateField(name="Date")
@@ -37,7 +37,7 @@ class GitHubContributorsStatsSource(StreamingDataSource):
             raise ValueError('cannot gather information without a valid account')
         client = AsyncHTTPClient()
 
-        source_filter = GitHubRepositoryFilter(source_filter)
+        source_filter = GitHubRepositoryDateFilter(source_filter)
 
         if source_filter.repository is None:
             raise ValueError('required parameter projects missing')
@@ -68,9 +68,20 @@ class GitHubContributorsStatsSource(StreamingDataSource):
         for user_data in data:
             # and parse through our weeks
             for week in user_data.get('weeks', []):
+                date = datetime.fromtimestamp(week['w'])
+                if source_filter.date is not None:
+                    # check for filtered date
+                    if isinstance(source_filter.date, dict):
+                        if source_filter.date.get('_min', None) is not None and source_filter.date['_min'] > date:
+                            continue
+                        if source_filter.date.get('_max', None) is not None and source_filter.date['_max'] < date:
+                            continue
+                    else:
+                        if source_filter.date > date:
+                            continue
                 obj = {
                     # week data is a Unix timestamp
-                    'date': datetime.fromtimestamp(week['w']).isoformat(),
+                    'date': date.isoformat(),
                     # and our user
                     'author': user_data['author']['login'],
                     # and our commit data

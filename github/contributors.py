@@ -65,23 +65,41 @@ class GitHubContributorsStatsSource(StreamingDataSource):
         # open our list
         cls.write('[')
         count = 0
+        # bring up our min/max filters if we have them
+        if isinstance(source_filter.date, dict):
+            filter_min = source_filter.date.get('_min', None)
+            filter_max = source_filter.date.get('_max', None)
+            if filter_min is not None:
+                try:
+                    filter_min = datetime.strptime(filter_min, '%Y-%m-%d')
+                except ValueError:
+                    pass
+            if filter_max is not None:
+                try:
+                    filter_max = datetime.strptime(filter_max, '%Y-%m-%d')
+                except ValueError:
+                    pass
+        # otherwise, our dates come in as strings, so we need to parse that
+        elif isinstance(source_filter.date, str):
+            try:
+                source_filter.date = datetime.strptime(source_filter.date, '%Y-%m-%d')
+            except ValueError:
+                pass
         for user_data in data:
             # and parse through our weeks
             for week in user_data.get('weeks', []):
-                date = datetime.fromtimestamp(week['w'])
+                weekdate = datetime.fromtimestamp(week['w'])
                 if source_filter.date is not None:
                     # check for filtered date
-                    if isinstance(source_filter.date, dict):
-                        if source_filter.date.get('_min', None) is not None and source_filter.date['_min'] > date:
-                            continue
-                        if source_filter.date.get('_max', None) is not None and source_filter.date['_max'] < date:
-                            continue
-                    else:
-                        if source_filter.date > date:
-                            continue
+                    if filter_min is not None and filter_min > weekdate:
+                        continue
+                    if filter_max is not None and filter_max < weekdate:
+                        continue
+                    if isinstance(source_filter.date, datetime) and source_filter.date > weekdate:
+                        continue
                 obj = {
                     # week data is a Unix timestamp
-                    'date': date.isoformat(),
+                    'date': weekdate.isoformat(),
                     # and our user
                     'author': user_data['author']['login'],
                     # and our commit data

@@ -2,6 +2,7 @@ from vizydrop.sdk.application import Application
 
 from .authentication import TargetprocessBasicAuth, TargetproessTokenAuth
 from .assignables import *
+from .projects import TargetprocessProject, TargetprocessProgram
 
 
 class Targetprocess(Application):
@@ -17,4 +18,5 @@ class Targetprocess(Application):
         authentication = [TargetprocessBasicAuth, TargetproessTokenAuth, ]
 
         sources = [TargetprocessAssignablesSource, TargetprocessUserStoriesSource, TargetprocessBugsSource,
-                   TargetprocessRequestsSource, TargetprocessFeaturesSource, TargetprocessTasksSource]
+                   TargetprocessRequestsSource, TargetprocessFeaturesSource, TargetprocessTasksSource,
+                   TargetprocessProject, TargetprocessProgram]

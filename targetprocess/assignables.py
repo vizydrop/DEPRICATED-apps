@@ -1,10 +1,10 @@
-from targetprocess.sourcebase import TargetprocessSourceBase
+from targetprocess.sourcebase import TargetprocessAssignable
 
 from vizydrop.fields import *
 from .filter import TargetprocessAssignablesFilter
 
 
-class TargetprocessAssignablesSource(TargetprocessSourceBase):
+class TargetprocessAssignablesSource(TargetprocessAssignable):
     class Meta:
         identifier = "assignables"
         name = "All Entities"
@@ -14,7 +14,7 @@ class TargetprocessAssignablesSource(TargetprocessSourceBase):
 
         tp_api_call = "Assignables"
 
-    class Schema(TargetprocessSourceBase.Schema):
+    class Schema(TargetprocessAssignable.Schema):
         # shim EntityType in there...
         EntityType = TextField(name="Entity Type", description="Type of entity e.g. Bug, Feature, Task, etc.",
                                response_loc="EntityType-Name")
@@ -30,7 +30,7 @@ class TargetprocessUserStoriesSource(TargetprocessAssignablesSource):
 
         tp_api_call = "UserStories"
 
-    class Schema(TargetprocessSourceBase.Schema):
+    class Schema(TargetprocessAssignable.Schema):
         # Shims!
         Feature = TextField(name="Feature", description="Feature where this User story is found",
                             response_loc="Feature-Name")
@@ -46,7 +46,7 @@ class TargetprocessBugsSource(TargetprocessAssignablesSource):
 
         tp_api_call = "Bugs"
 
-    class Schema(TargetprocessSourceBase.Schema):
+    class Schema(TargetprocessAssignable.Schema):
         # Shims!
         Severity = TextField(name="Severity", description="Bug Severity", response_loc="Severity-Name")
         UserStory = TextField(name="User Story", description="User story where this bug is found",

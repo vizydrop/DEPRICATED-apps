@@ -15,9 +15,9 @@ from vizydrop.fields import NumberField, TextField, DateField, DecimalField, IDF
 from vizydrop.sdk.source import StreamingDataSource, SourceSchema
 
 
-class TargetprocessSourceBase(StreamingDataSource):
+class TargetprocessGeneral(StreamingDataSource):
     class Meta:
-        tp_api_call = "Assignables"
+        tp_api_call = "Generals"
 
     class Schema(SourceSchema):
         Id = IDField(name="ID", description="Entity ID", force_int=True)
@@ -28,37 +28,7 @@ class TargetprocessSourceBase(StreamingDataSource):
                             description="End date for time-boxed entities such as Iteration, Project, Release")
         CreateDate = DateField(name="Create Date", description="Entity creation date")
         Tags = TextField(name="Tags", description="List of tags")
-        Effort = DecimalField(name="Effort", description="Total efforts for assignable")
-        EffortCompleted = DecimalField(name="Effort Completed", description="Effort spent on assignment")
-        EffortToDo = DecimalField(name="Effort ToDo", description="Effort required to complete assignment")
-        Progress = DecimalField(name="Progress", description="Percent done for assignable")
-        TimeSpent = DecimalField(name="Time Spent", description="Total time spent on assignment")
-        TimeRemain = DecimalField(name="Time Remain",
-                                  description="Total time remaining to complete assignment for Role")
-        PlannedStartDate = DateField(name="Planned Start Date",
-                                     description="Planned Start date for time-boxed entities such as Iteration, Project, Release")
-        PlannedEndDate = DateField(name="Planned End Date",
-                                   description="Planned End date for time-boxed entities such as Iteration, Project, Release")
-        Assignments = TextField(name="Assignment", description="User assigned to this item",
-                                response_loc="Assignments-GeneralUser-LastName")
-        LeadTime = NumberField(name="Lead Time",
-                               description="Number of days between assignable create date and end date")
-        CycleTime = NumberField(name="Cycle Time",
-                                description="Number of days between assignable start date and end date")
-        ForecastEndDate = DateField(name="Forecast End Date", description="End date predicted on current progress")
-        Iteration = TextField(name="Iteration", description="Assignable entity can be assigned to Iteration",
-                              response_loc="Iteration-Name")
-        TeamIteration = TextField(name="Team Iteration",
-                                  description="Assignable entity can be assigned to TeamIteration",
-                                  response_loc="TeamIteration-Name")
-        Release = TextField(name="Release",
-                            description="Assignable entity can be assigned to Release or can be in project Backlog (Release is not defined in this case)",
-                            response_loc="Release-Name")
-        EntityState = TextField(name="Entity State", description="State of Assignable",
-                                response_loc="EntityState-Name")
-        Priority = TextField(name="Priority", description="Priority of Assignable", response_loc="Priority-Name")
         Project = TextField(name="Project", description="Project where entity is found", response_loc="Project-Name")
-        Teams = TextField(name="Teams", description="Assigned Team(s)", response_loc="AssignedTeams-Team-Name")
 
     @classmethod
     def get_api_includes(cls):
@@ -92,7 +62,7 @@ class TargetprocessSourceBase(StreamingDataSource):
         if 'Items' in item.keys():
             # handle our inner collections
             return ','.join([cls._get_value_from_location(i, location) for i in item['Items']])
-        return super(TargetprocessSourceBase, cls)._get_value_from_location(item, location)
+        return super(TargetprocessGeneral, cls)._get_value_from_location(item, location)
 
     @classmethod
     @gen.coroutine
@@ -172,3 +142,37 @@ class TargetprocessSourceBase(StreamingDataSource):
         # finish
         app_log.info(
             "Finished retrieval of {} {} for {}".format(item_count, cls.Meta.tp_api_call, account._id))
+
+
+class TargetprocessAssignable(TargetprocessGeneral):
+    class Schema(TargetprocessGeneral.Schema):
+        Effort = DecimalField(name="Effort", description="Total efforts for assignable")
+        EffortCompleted = DecimalField(name="Effort Completed", description="Effort spent on assignment")
+        EffortToDo = DecimalField(name="Effort ToDo", description="Effort required to complete assignment")
+        Progress = DecimalField(name="Progress", description="Percent done for assignable")
+        TimeSpent = DecimalField(name="Time Spent", description="Total time spent on assignment")
+        TimeRemain = DecimalField(name="Time Remain",
+                                  description="Total time remaining to complete assignment for Role")
+        PlannedStartDate = DateField(name="Planned Start Date",
+                                     description="Planned Start date for time-boxed entities such as Iteration, Project, Release")
+        PlannedEndDate = DateField(name="Planned End Date",
+                                   description="Planned End date for time-boxed entities such as Iteration, Project, Release")
+        Assignments = TextField(name="Assignment", description="User assigned to this item",
+                                response_loc="Assignments-GeneralUser-LastName")
+        LeadTime = NumberField(name="Lead Time",
+                               description="Number of days between assignable create date and end date")
+        CycleTime = NumberField(name="Cycle Time",
+                                description="Number of days between assignable start date and end date")
+        ForecastEndDate = DateField(name="Forecast End Date", description="End date predicted on current progress")
+        Iteration = TextField(name="Iteration", description="Assignable entity can be assigned to Iteration",
+                              response_loc="Iteration-Name")
+        TeamIteration = TextField(name="Team Iteration",
+                                  description="Assignable entity can be assigned to TeamIteration",
+                                  response_loc="TeamIteration-Name")
+        Release = TextField(name="Release",
+                            description="Assignable entity can be assigned to Release or can be in project Backlog (Release is not defined in this case)",
+                            response_loc="Release-Name")
+        EntityState = TextField(name="Entity State", description="State of Assignable",
+                                response_loc="EntityState-Name")
+        Priority = TextField(name="Priority", description="Priority of Assignable", response_loc="Priority-Name")
+        Teams = TextField(name="Teams", description="Assigned Team(s)", response_loc="AssignedTeams-Team-Name")

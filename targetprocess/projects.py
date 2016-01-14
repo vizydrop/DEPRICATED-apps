@@ -3,7 +3,7 @@ from targetprocess.filter import TargetprocessBaseFilter
 from vizydrop.fields import DecimalField, DateTimeField, NumberField, TextField
 
 
-class TargetprocessProject(TargetprocessGeneral):
+class TargetprocessProjectSource(TargetprocessGeneral):
     class Meta:
         identifier = "project"
         name = "Projects"
@@ -24,7 +24,7 @@ class TargetprocessProject(TargetprocessGeneral):
         Program = TextField(name='Program', response_loc='Program-Name', description='Program associated with the project')
 
 
-class TargetprocessProgram(TargetprocessGeneral):
+class TargetprocessProgramSource(TargetprocessGeneral):
     class Meta:
         identifier = "program"
         name = "Programs"

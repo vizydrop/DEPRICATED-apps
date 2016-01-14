@@ -65,6 +65,17 @@ class TargetprocessFeaturesSource(TargetprocessAssignablesSource):
         tp_api_call = "Features"
 
 
+class TargetprocessEpicsSource(TargetprocessAssignablesSource):
+    class Meta:
+        identifier = "epics"
+        name = "Epics"
+        tags = ["Epics", ]
+        description = "List of epics"
+        filter = TargetprocessAssignablesFilter
+
+        tp_api_call = "Epics"
+
+
 class TargetprocessRequestsSource(TargetprocessAssignablesSource):
     class Meta:
         identifier = "requests"

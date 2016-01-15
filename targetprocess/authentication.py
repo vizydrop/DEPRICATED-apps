@@ -72,7 +72,7 @@ class TargetproessTokenAuth(Account):
     tp_url = fields.URLField(name="TP Path", description="Path to your Targetprocess instance", optional=False)
     token_link = fields.LinkField(name="More details", default="http://dev.targetprocess.com/rest/authentication#token",
                                   description="To get your API token, navigate to [your tp instance]/api/v1/authentication")
-    token = fields.TextField(name="API Token", description="API Token from Targetprocess", optional=False)
+    token = fields.TextField(name="API Token", description="API Token from Targetprocess", optional=False, protected=True)
 
     def get_request(self, url, headers=None, **kwargs):
         url = ('&' if '?' in url else '?').join([url, 'token={}'.format(self.token)])

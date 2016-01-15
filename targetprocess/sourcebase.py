@@ -67,7 +67,12 @@ class TargetprocessGeneral(StreamingDataSource):
     @classmethod
     @gen.coroutine
     def get_data(cls, account, source_filter, limit=100, skip=0):
-        source_filter = TargetprocessAssignablesFilter(source_filter)
+        try:
+            # first try the filter specified in our Meta-class
+            source_filter = cls.Meta.filter(source_filter)
+        except AttributeError:
+            # and fallback to our base assignables filter if that fails
+            source_filter = TargetprocessAssignablesFilter(source_filter)
 
         where_clause = source_filter.get_where_clause()
 

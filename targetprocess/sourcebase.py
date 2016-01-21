@@ -28,7 +28,6 @@ class TargetprocessGeneral(StreamingDataSource):
                             description="End date for time-boxed entities such as Iteration, Project, Release")
         CreateDate = DateField(name="Create Date", description="Entity creation date")
         Tags = TextField(name="Tags", description="List of tags")
-        Project = TextField(name="Project", description="Project where entity is found", response_loc="Project-Name")
 
     @classmethod
     def get_api_includes(cls):
@@ -151,6 +150,7 @@ class TargetprocessGeneral(StreamingDataSource):
 
 class TargetprocessAssignable(TargetprocessGeneral):
     class Schema(TargetprocessGeneral.Schema):
+        Project = TextField(name="Project", description="Project where entity is found", response_loc="Project-Name")
         Effort = DecimalField(name="Effort", description="Total efforts for assignable")
         EffortCompleted = DecimalField(name="Effort Completed", description="Effort spent on assignment")
         EffortToDo = DecimalField(name="Effort ToDo", description="Effort required to complete assignment")

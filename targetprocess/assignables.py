@@ -1,4 +1,4 @@
-from targetprocess.sourcebase import TargetprocessAssignable
+from targetprocess.sourcebase import TargetprocessAssignable, TargetprocessGeneral
 
 from vizydrop.fields import *
 from .filter import TargetprocessAssignablesFilter
@@ -64,6 +64,10 @@ class TargetprocessFeaturesSource(TargetprocessAssignablesSource):
 
         tp_api_call = "Features"
 
+    class Schema(TargetprocessAssignable.Schema):
+        # Shim
+        Epic = TextField(name="Epic", description="Epic where this feature is found", response_loc="Epic-Name")
+
 
 class TargetprocessEpicsSource(TargetprocessAssignablesSource):
     class Meta:
@@ -74,6 +78,35 @@ class TargetprocessEpicsSource(TargetprocessAssignablesSource):
         filter = TargetprocessAssignablesFilter
 
         tp_api_call = "Epics"
+
+    class Schema(TargetprocessGeneral.Schema):
+        # We're removing iteration/team iteration from our assignable schema, so this closely mirrors that
+        Project = TextField(name="Project", description="Project where entity is found", response_loc="Project-Name")
+        Effort = DecimalField(name="Effort", description="Total efforts for assignable")
+        EffortCompleted = DecimalField(name="Effort Completed", description="Effort spent on assignment")
+        EffortToDo = DecimalField(name="Effort ToDo", description="Effort required to complete assignment")
+        Progress = DecimalField(name="Progress", description="Percent done for assignable")
+        TimeSpent = DecimalField(name="Time Spent", description="Total time spent on assignment")
+        TimeRemain = DecimalField(name="Time Remain",
+                                  description="Total time remaining to complete assignment for Role")
+        PlannedStartDate = DateField(name="Planned Start Date",
+                                     description="Planned Start date for time-boxed entities such as Iteration, Project, Release")
+        PlannedEndDate = DateField(name="Planned End Date",
+                                   description="Planned End date for time-boxed entities such as Iteration, Project, Release")
+        Assignments = TextField(name="Assignment", description="User assigned to this item",
+                                response_loc="Assignments-GeneralUser-LastName")
+        LeadTime = NumberField(name="Lead Time",
+                               description="Number of days between assignable create date and end date")
+        CycleTime = NumberField(name="Cycle Time",
+                                description="Number of days between assignable start date and end date")
+        ForecastEndDate = DateField(name="Forecast End Date", description="End date predicted on current progress")
+        Release = TextField(name="Release",
+                            description="Assignable entity can be assigned to Release or can be in project Backlog (Release is not defined in this case)",
+                            response_loc="Release-Name")
+        EntityState = TextField(name="Entity State", description="State of Assignable",
+                                response_loc="EntityState-Name")
+        Priority = TextField(name="Priority", description="Priority of Assignable", response_loc="Priority-Name")
+        Teams = TextField(name="Teams", description="Assigned Team(s)", response_loc="AssignedTeams-Team-Name")
 
 
 class TargetprocessRequestsSource(TargetprocessAssignablesSource):

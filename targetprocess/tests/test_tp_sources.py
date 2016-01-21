@@ -43,6 +43,15 @@ class TargetprocessSourceTests(TargetprocessTpaTestCase):
     def test_get_features(self):
         self.run_tests_with('features')
 
+    def test_get_epics(self):
+        self.run_tests_with('epics')
+
+    def test_get_projects(self):
+        self.run_tests_with('project')
+
+    def test_get_programs(self):
+        self.run_tests_with('program')
+
     def test_get_assignables(self):
         response = self.run_tests_with('assignables')
         # be sure our EntityType shim works

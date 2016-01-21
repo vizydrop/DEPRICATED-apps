@@ -8,7 +8,7 @@ class TargetprocessProjectSource(TargetprocessGeneral):
         identifier = "project"
         name = "Projects"
         tags = ["PM", "Projects"]
-        description = "Project"
+        description = "List of projects"
         filter = TargetprocessBaseFilter
 
         tp_api_call = "Projects"
@@ -29,7 +29,7 @@ class TargetprocessProgramSource(TargetprocessGeneral):
         identifier = "program"
         name = "Programs"
         tags = ["PM", "Programs"]
-        description = "Program"
+        description = "List of programs"
         filter = TargetprocessBaseFilter
 
         tp_api_call = "Programs"

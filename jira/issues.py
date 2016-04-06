@@ -88,6 +88,7 @@ class JIRAIssuesSource(StreamingDataSource):
     class Schema(SourceSchema):
         id = IDField(name="Issue ID")
         key = TextField(name="Issue Key")
+        project = TextField(name="Project", response_loc="fields-project-name")
         state = TextField(name="Issue State", response_loc="fields-status-name")
         summary = TextField(name="Issue summary", response_loc="fields-summary")
         progress = NumberField(name="Current progress", response_loc="fields-progress")

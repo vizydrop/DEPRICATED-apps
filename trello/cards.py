@@ -51,6 +51,7 @@ class TrelloCardSource(DataSource):
     class Schema(SourceSchema):
         id = IDField(description="Card ID")
         name = TextField(name="Name", description="Name of the card")
+        board_name = TextField(name="Board Name", description="Name of the board")
         closed = BooleanField(name="Closed", description="Is the card closed?")
         desc = TextField(name="Description", description="Card Description")
         dateLastActivity = DateTimeField(name="Last Activity Date", description="Date/Time of last activity")
@@ -75,6 +76,14 @@ class TrelloCardSource(DataSource):
         cards = []
         for board in source_filter.boards:
             app_log.info("Retrieving board {}".format(board))
+
+            try:
+                resp = yield client.fetch(account.get_request("https://api.trello.com/1/boards/{}/name".format(board)))
+            except HTTPError as err:
+                return {"code": err.code, "reason": err.response.reason, "error": err.response.body.decode('utf-8')}
+            else:
+                board_name = json.loads(resp.body.decode('utf-8'))['_value']
+
             uri = "https://api.trello.com/1/boards/{}/cards".format(board)
             req = account.get_request(uri)
             try:
@@ -96,6 +105,8 @@ class TrelloCardSource(DataSource):
             resp_obj = json.loads(data)
 
             for obj in resp_obj:
+                obj['board_name'] = board_name
+
                 if hasattr(source_filter,
                            'lists') and source_filter.lists is not None and source_filter.lists.__len__() > 0:
                     if obj['idList'] in source_filter.lists:

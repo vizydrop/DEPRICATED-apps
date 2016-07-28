@@ -3,14 +3,18 @@ import json
 from . import TargetprocessTpaTestCase
 from os import environ
 
-VALID_ACCOUNT = {"auth": "basic", "tp_url": environ.get('TP_URL',''), "username": environ.get('TP_USER',''),
-                 "password": environ.get('TP_PASS','')}
+
+VALID_ACCOUNT = {"auth": "token",
+                 "tp_url": environ.get('TP_URL', ''),
+                 "token": environ.get('TP_TOKEN', '')}
 
 
 class TargetprocessAuthTests(TargetprocessTpaTestCase):
     def test_validate_account(self):
         payload = {"id": "basic", "fields": VALID_ACCOUNT}
         response = self.POST('/validate', data=json.dumps(payload))
+
+        print(response)
 
         self.assertHttpOk(response)
 

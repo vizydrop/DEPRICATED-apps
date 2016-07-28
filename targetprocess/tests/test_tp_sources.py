@@ -7,11 +7,10 @@ import json
 
 class TargetprocessSourceTests(TargetprocessTpaTestCase):
     def get_collection(self, collection, **kwargs):
-        filter = {"projects": [13]}
-        if kwargs:
-            filter.update(kwargs)
-        payload = {"source": collection, "account": VALID_ACCOUNT, "filter": filter}
-        return self.POST('/', data=json.dumps(payload))
+        filters = {"projects": [13]}
+        filters.update(kwargs)
+
+        return self.POST('/', data=json.dumps({"source": collection, "account": VALID_ACCOUNT, "filter": filters}))
 
     def run_tests_with(self, collection):
         response = self.get_collection(collection)
@@ -32,6 +31,7 @@ class TargetprocessSourceTests(TargetprocessTpaTestCase):
 
     def test_get_bugs(self):
         response = self.run_tests_with('bugs')
+
         # be sure our shims work
         self.assertIn('Severity', response[0].keys())
         self.assertIn('UserStory', response[0].keys())

@@ -19,7 +19,6 @@ class TargetprocessBasicAuth(AppHTTPBasicAuthAccount):
     def get_request(self, url, headers=None, **kwargs):
         if not headers:
             headers = {}
-        headers['Authorization'] = "Basic {}".format(self._get_basic_auth())
         headers['Accept'] = 'application/json'
         headers['Content-Type'] = 'application/json'
         return HTTPRequest(url, headers=headers, **kwargs)

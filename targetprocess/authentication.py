@@ -21,6 +21,7 @@ class TargetprocessBasicAuth(AppHTTPBasicAuthAccount):
             headers = {}
         headers['Accept'] = 'application/json'
         headers['Content-Type'] = 'application/json'
+        headers['Authorization'] = "Basic {}".format(self._get_basic_auth())
         return HTTPRequest(url, headers=headers, **kwargs)
 
     @property

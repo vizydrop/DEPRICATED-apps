@@ -21,7 +21,13 @@ class TargetprocessBasicAuth(AppHTTPBasicAuthAccount):
             headers = {}
         headers['Accept'] = 'application/json'
         headers['Content-Type'] = 'application/json'
-        headers['Authorization'] = "Basic {}".format(self._get_basic_auth())
+
+        # TODO: Fix this later
+        try:
+            headers['Authorization'] = "Basic {}".format(self._get_basic_auth())
+        except Exception as err:
+            print(err)
+
         return HTTPRequest(url, headers=headers, **kwargs)
 
     @property

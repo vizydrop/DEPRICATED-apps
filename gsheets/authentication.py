@@ -24,7 +24,7 @@ class GoogleSheetsOAuth(AppOAuthv2Account):
 
         client_id = os.environ.get('GSHEETS_CLIENT_ID', '')
         client_secret = os.environ.get('GSHEETS_CLIENT_SECRET', '')
-        scope = 'https://spreadsheets.google.com/feeds https://docs.google.com/feeds https://www.googleapis.com/auth/userinfo.profile'
+        scope = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/docs https://www.googleapis.com/auth/userinfo.profile'
 
         token_placement = AUTH_HEADER
         token_type = 'Bearer'
